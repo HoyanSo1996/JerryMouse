@@ -1,8 +1,11 @@
 package com.omega.handler;
 
+import com.omega.http.CustomHttpRequest;
+
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 /**
  * Class HttpHandler
@@ -22,17 +25,13 @@ public class RequestHandler implements Runnable {
     public void run() {
         try {
             // 读取request
-            InputStream inputStream = socket.getInputStream();
-            BufferedReader bufferedReader = new BufferedReader(
-                                            new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+            CustomHttpRequest customHttpRequest = new CustomHttpRequest(socket.getInputStream());
             System.out.println("\n=========接收到浏览器发送的数据==========");
-            String msg;
-            while ((msg = bufferedReader.readLine()) != null) {
-                if (msg.isEmpty()) {
-                    break;
-                }
-                System.out.println(msg);
-            }
+            System.out.println("method : " + customHttpRequest.getMethod());
+            System.out.println("uri : " + customHttpRequest.getUri());
+            System.out.println("num1 : " + customHttpRequest.getParameter("num1"));
+            System.out.println("num2 : " + customHttpRequest.getParameter("num2"));
+            System.out.println("hobby : " + Arrays.toString(customHttpRequest.getParameterValues("hobby")));
 
             // 返回response
             OutputStream outputStream = socket.getOutputStream();
@@ -50,7 +49,6 @@ public class RequestHandler implements Runnable {
 
             // 关闭资源
             outputStream.close();
-            inputStream.close();
             socket.close();
 
         } catch (IOException e) {
