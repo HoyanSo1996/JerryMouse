@@ -1,6 +1,7 @@
 package com.omega.handler;
 
 import com.omega.http.CustomHttpRequest;
+import com.omega.http.CustomHttpResponse;
 
 import java.io.*;
 import java.net.Socket;
@@ -34,13 +35,10 @@ public class RequestHandler implements Runnable {
             System.out.println("hobby : " + Arrays.toString(customHttpRequest.getParameterValues("hobby")));
 
             // 返回response
-            OutputStream outputStream = socket.getOutputStream();
-            // 返回的http响应的响应头和响应体之间有两个换行 \r\n\r\n
-            String responseHeader = "HTTP/1.1 200 OK\r\n" +
-                                    "Content-Type: text/html; charset=utf-8\r\n" +
-                                    "\r\n";
+            CustomHttpResponse customHttpResponse = new CustomHttpResponse(socket.getOutputStream());
+            OutputStream outputStream = customHttpResponse.getOutputStream();
             String responseBody = "<h1>Hi, Jerry mouse!</h1>";
-            String response = responseHeader + responseBody;
+            String response = CustomHttpResponse.RESPONSE_HEADER + responseBody;
             outputStream.write(response.getBytes(StandardCharsets.UTF_8));
             outputStream.flush();
 
