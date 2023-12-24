@@ -22,6 +22,7 @@ public class CustomHttpRequest {
     private String method;
     private String uri;
     private HashMap<String, String[]> parameterMap = new HashMap<>();
+    private HashMap<String, String> headerMap = new HashMap<>();
 
     private final InputStream inputStream;
 
@@ -54,10 +55,25 @@ public class CustomHttpRequest {
             }
 
             // 2.获取请求体
-            /*String msg;
-            while ((msg = bufferedReader.readLine()) != null) {
-                System.out.println(msg);
-            }*/
+            String requestHeaderString;
+            while ((requestHeaderString = bufferedReader.readLine()) != null) {
+                if (requestHeaderString.isEmpty()) {
+                    break;
+                }
+                this.parseRequestHeaderString(requestHeaderString);
+            }
+
+            /*
+                这里读取requestBody必须同read来读, 不能使用readLine, 因为请求体内容后面没有接终止符,
+                所以必须使用字符数组收集信息
+             */
+            if ("POST".equalsIgnoreCase(this.method)) {
+                int contentLength = Integer.parseInt(this.headerMap.get("Content-Length"));
+                char[] buffer = new char[contentLength];
+                int len = bufferedReader.read(buffer);
+                String requestBody = new String(buffer, 0, len);
+                this.parseParameterPairString(requestBody);
+            }
 
             // !!这里不能关闭inputStream, 因为与socket关联, 如果在这里关了会报socketClose异常
             // inputStream.close();
@@ -68,8 +84,8 @@ public class CustomHttpRequest {
     }
 
     /**
-     * 将请求参数字符串解析成Map结构
-     * @param parameterPairString 请求参数字符串
+     * 将请求参数字符串解析成Map结构, 并放入parameterMap中
+     * @param parameterPairString 请求参数字符串 xxx=xxx
      */
     public void parseParameterPairString(String parameterPairString) {
         String[] parameterPairArr = parameterPairString.split("&");
@@ -83,6 +99,17 @@ public class CustomHttpRequest {
             newValue[newValue.length - 1] = value;
             parameterMap.put(key, newValue);
         }
+    }
+
+    /**
+     * 将请求头参数字符串解析成Map结构, 并放入headerMap中
+     * @param requestHeaderString 请求头参数 xxx: xxx
+     */
+    public void parseRequestHeaderString(String requestHeaderString) {
+        int index = requestHeaderString.indexOf(":");
+        String key = requestHeaderString.substring(0, index);
+        String value = requestHeaderString.substring(index + 2);
+        headerMap.put(key, value);
     }
 
 
